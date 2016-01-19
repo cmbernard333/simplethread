@@ -1,5 +1,5 @@
 Simple cross-platform threading primitives library.
 
 TODO:
-	stack size support
-	joinable vs daemon thread
+- [ ] explicit stack size support
+- [ ] joinable vs daemon thread
