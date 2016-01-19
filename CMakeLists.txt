@@ -15,5 +15,9 @@ else()
 	target_link_libraries(simple_thread pthread)
 endif()
 
+
+# TODO: add cunit and cunit tests
+# add_subdirectory(test/unit)
+
 # EXPORT_HEADERS(simple_thread simple_thread.h)
 # EXPORT_AS_DEPENDENCY(simple_thread)
