@@ -17,7 +17,7 @@ endif()
 
 
 # TODO: add cunit and cunit tests
-# add_subdirectory(test/unit)
+add_subdirectory(test/unit)
 
 # EXPORT_HEADERS(simple_thread simple_thread.h)
 # EXPORT_AS_DEPENDENCY(simple_thread)

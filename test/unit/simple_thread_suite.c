@@ -23,7 +23,7 @@ typedef struct monitor_t
 
 int test_thread(void *data)
 {
-	nimLog(0,"Test thread: Hello, World!\n");
+	fprintf(stdout,"Test thread: Hello, World!\n");
 	return 0;
 }
 
@@ -49,16 +49,16 @@ int worker_one(void *data)
 {
   int rc = 0;
   AtomicInteger *integer = (AtomicInteger*)data;
-  nimLog(0,"worker_one: running!\n");
+  fprintf(stdout,"worker_one: running!\n");
   ThreadLock_lock(integer->lock);
-  nimLog(0,"worker_one: lock!\n");
+  fprintf(stdout,"worker_one: lock!\n");
   integer->x = 10;
   CU_ASSERT_EQUAL(integer->x, 10);
 
   sleep(5);
   CU_ASSERT_EQUAL(integer->x, 10);
   ThreadLock_unlock(integer->lock);
-  nimLog(0,"worker_one: unlock!\n");
+  fprintf(stdout,"worker_one: unlock!\n");
   return 0;
 }
 
@@ -66,16 +66,16 @@ int worker_two(void *data)
 {
   int rc = 0;
   AtomicInteger *integer = (AtomicInteger*)data;
-  nimLog(0,"worker_two: running!\n");
+  fprintf(stdout,"worker_two: running!\n");
   ThreadLock_lock(integer->lock);
-  nimLog(0,"worker_two: lock!\n");
+  fprintf(stdout,"worker_two: lock!\n");
   integer->x = 11;
   CU_ASSERT_EQUAL(integer->x, 11);
 
   sleep(5);
   CU_ASSERT_EQUAL(integer->x, 11);
   ThreadLock_unlock(integer->lock);
-  nimLog(0,"worker_two: unlock!\n");
+  fprintf(stdout,"worker_two: unlock!\n");
   return 0;
 }
 
@@ -83,15 +83,15 @@ int condition_worker_one(void *data)
 {
   int rc = 0;
   ThreadMonitor *monitor = (ThreadMonitor*)data;
-  nimLog(0,"condition_worker_one: running!\n");
-  nimLog(0,"condition_worker_one: waiting on condition!\n");
+  fprintf(stdout,"condition_worker_one: running!\n");
+  fprintf(stdout,"condition_worker_one: waiting on condition!\n");
   ThreadLock_lock(monitor->lock);
   while( count == 0 ) {
 	rc = ThreadConditionVar_wait_lock_ms(monitor->condition,monitor->lock,10*1000);
   }
   ThreadLock_unlock(monitor->lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
-  nimLog(0,"condition_worker_one: woke up!");
+  CU_ASSERT_EQUAL(rc, 0);
+  fprintf(stdout,"condition_worker_one: woke up!");
   return rc;
 }
 
@@ -99,8 +99,8 @@ int condition_worker_two(void *data)
 {
   int rc = 0;
   ThreadMonitor *monitor = (ThreadMonitor*)data;
-  nimLog(0,"condition_worker_two: running!\n");
-  nimLog(0,"condition_worker_two: signaling condition!\n");
+  fprintf(stdout,"condition_worker_two: running!\n");
+  fprintf(stdout,"condition_worker_two: signaling condition!\n");
   sleep(5);
   
   ThreadLock_lock(monitor->lock);
@@ -108,15 +108,13 @@ int condition_worker_two(void *data)
   ThreadLock_unlock(monitor->lock);
   
   rc = ThreadConditionVar_signal(monitor->condition);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   return rc;
 }
 
 
 static int init_simple_thread_suite(void)
 {
-    nimLogSet("cutest.log", "simple_thread_suite", 15, 0);
-    nimTraceLevel(1,7,5);
     return 0;
 }
 
@@ -132,12 +130,12 @@ static void test_thread_condition_init_and_cleanup(void)
 
 	rc = ThreadConditionVar_init(&condvar);
 
-	CU_ASSERT_EQUAL(rc, NIME_OK);
+	CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_PTR_NOT_NULL(condvar);
 
 	rc = ThreadConditionVar_cleanup(condvar);
 	
-	CU_ASSERT_EQUAL(rc, NIME_OK);
+	CU_ASSERT_EQUAL(rc, 0);
 }
 
 static void test_thread_start_join(void)
@@ -145,11 +143,11 @@ static void test_thread_start_join(void)
 	int rc = 0;
 	SimpleThreadHandle *handle;
 	rc = SimpleThread_createThread(&handle, test_thread,NULL);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 	CU_ASSERT_PTR_NOT_NULL(handle);
 
 	rc = SimpleThread_joinThread(handle);
-	CU_ASSERT_EQUAL(rc, NIME_OK);
+	CU_ASSERT_EQUAL(rc, 0);
 	SimpleThread_closeHandle(handle);
 }
 
@@ -159,11 +157,11 @@ static void test_lock_init_cleanup(void)
   ThreadLock *lock;
   rc = ThreadLock_init(&lock);
 
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(lock);
 
   rc = ThreadLock_cleanup(lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 }
 
 static void test_thread_lock_on_integer(void)
@@ -175,25 +173,25 @@ static void test_thread_lock_on_integer(void)
 
   /* lock */
   rc = ThreadLock_init(&atomic_integer.lock);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
 
   /* threads */
   rc = SimpleThread_createThread(&handle_one, worker_one, &atomic_integer);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(handle_one);
   rc = SimpleThread_createThread(&handle_two, worker_two, &atomic_integer);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(handle_two);
 
   /* wait for the threads */
   rc = SimpleThread_joinThread(handle_one);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
   rc = SimpleThread_joinThread(handle_two);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
 
   /* cleanup */
   rc = ThreadLock_cleanup(atomic_integer.lock);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
   SimpleThread_closeHandle(handle_one);
   SimpleThread_closeHandle(handle_two);
 }
@@ -209,36 +207,36 @@ static void test_thread_condition_var_wait_and_signal(void)
 
   /* setup the signal */
   rc = ThreadConditionVar_init(&signal_wake);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 
   /* setup the lock */
   rc = ThreadLock_init(&signal_lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   
   monitor.condition = signal_wake;
   monitor.lock = signal_lock;
 
   /* threads */
   rc = SimpleThread_createThread(&handle_one, condition_worker_one, &monitor);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(handle_one);
   rc = SimpleThread_createThread(&handle_two, condition_worker_two, &monitor);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(handle_two);
 
   /* join with thread 1 */
   rc = SimpleThread_joinThread(handle_one);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 
   /* join with thread 2 */
   rc = SimpleThread_joinThread(handle_two);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 
   /* clean up */
   rc = ThreadConditionVar_cleanup(monitor.condition);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   rc = ThreadLock_cleanup(monitor.lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   SimpleThread_closeHandle(handle_one);
   SimpleThread_closeHandle(handle_two);
 }
@@ -251,26 +249,26 @@ static void test_thread_try_lock(void)
   ThreadLock *lock;
   /* setup lock */
   rc = ThreadLock_init(&lock);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
 
   /* threads */
   rc = SimpleThread_createThread(&handle_one,worker_trylock_one,lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   CU_ASSERT_PTR_NOT_NULL(handle_one);
   rc = SimpleThread_createThread(&handle_two,worker_trylock_two,lock);
-  CU_ASSERT_EQUAL(rc,NIME_OK);
+  CU_ASSERT_EQUAL(rc,0);
   CU_ASSERT_PTR_NOT_NULL(handle_two);
 
   /* join with thread 1 */
   rc = SimpleThread_joinThread(handle_one);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 
   /* join with thread 2 */
   rc = SimpleThread_joinThread(handle_two);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
 
   rc = ThreadLock_cleanup(lock);
-  CU_ASSERT_EQUAL(rc, NIME_OK);
+  CU_ASSERT_EQUAL(rc, 0);
   SimpleThread_closeHandle(handle_one);
   SimpleThread_closeHandle(handle_two);
 }
